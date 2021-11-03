@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(CudaIntroduction)
+project(CudaIntroduction LANGUAGES CXX CUDA)
 
 # set_property(TARGET tgt PROPERTY CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD 20)
