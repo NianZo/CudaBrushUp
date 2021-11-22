@@ -6,11 +6,46 @@
  */
 
 #include <array>
+#include <vector>
 #include <iostream>
 #include <chrono>
 #include <memory>
+#include <cuda.h>
 
 constexpr uint64_t DATASIZE = 100000000;
+
+template <typename T>
+class GPUMemory
+{
+public:
+	GPUMemory(size_t allocSize)
+	{
+		cudaMallocManaged(&gpuPtr, allocSize);
+	}
+
+	GPUMemory(std::vector<T> hostData)
+	{
+		cudaMallocManaged(&gpuPtr, hostData.size() * sizeof(T));
+		std::copy(hostData.begin(), hostData.end(), gpuPtr);
+	}
+
+	~GPUMemory()
+	{
+		cudaFree(gpuPtr);
+	}
+
+	__device__ T operator[](uint64_t index) const
+	{
+		return gpuPtr[index];
+	}
+
+	__device__ T& operator[](uint64_t index)
+	{
+		return gpuPtr[index];
+	}
+private:
+	T* gpuPtr;
+};
 
 template <typename T>
 void SumArraySequential(T& target, const T& a, const T& b)
@@ -21,8 +56,8 @@ void SumArraySequential(T& target, const T& a, const T& b)
 	}
 }
 
-template <typename T>
-__global__ void SumArrayCuda(T& target, const T& a, const T& b)
+
+__global__ void SumArrayCuda(GPUMemory<int>& target, const GPUMemory<int>& a, const GPUMemory<int>& b)
 {
 	uint64_t idx = (blockIdx.x * blockDim.x) + threadIdx.x;
 	if (idx < DATASIZE)
@@ -33,45 +68,32 @@ __global__ void SumArrayCuda(T& target, const T& a, const T& b)
 
 int main()
 {
-	// Using a C-style array for now (with C++ smart-pointers)
-	// std::unique_ptr a = std::make_unique<int[]>(DATASIZE);
-	// std::unique_ptr b = std::make_unique<int[]>(DATASIZE);
-	// Moving to raw pointers for the time being to interface with cudaMalloc
-	int* a;
-	int* b;
-	cudaMallocManaged(&a, DATASIZE * sizeof(int));
-	cudaMallocManaged(&b, DATASIZE * sizeof(int));
-
 	auto startTime = std::chrono::steady_clock::now();
 
 	// Fill arrays with random data
+	std::vector<int> hostA(DATASIZE);
+	std::vector<int> hostB(DATASIZE);
 	srand(42);
 	for (uint64_t i = 0; i < DATASIZE; i++)
 	{
-		a[i] = rand();
-		b[i] = rand();
+		hostA[i] = rand();
+		hostB[i] = rand();
 	}
+	GPUMemory<int> a(hostA);
+	GPUMemory<int> b(hostB);
 
 	auto dataFilledTime = std::chrono::steady_clock::now();
 
-	// Sequentially sum arrays into target
-	//std::unique_ptr sc = std::make_unique<int[]>(DATASIZE);
-	int* sc = new int[DATASIZE];
-	SumArraySequential(sc, a, b);
-
-	auto sequentialCalculationTime = std::chrono::steady_clock::now();
-
 	// Offload calculation to GPU
-	int* sp;
-	cudaMallocManaged(&sp, DATASIZE * sizeof(int));
+	GPUMemory<int> sp(DATASIZE * sizeof(int));
 	uint64_t blocks = DATASIZE / 32;
 	SumArrayCuda<<<blocks, 32>>>(sp, a, b);
 	cudaDeviceSynchronize();
 
 	auto cudaCalculationTime = std::chrono::steady_clock::now();
 
+
 	// Give output information
 	std::cout << "Time to fill arrays with data: " << static_cast<std::chrono::duration<double>>(dataFilledTime - startTime).count() << std::endl;
-	std::cout << "Time to sum arrays sequentially: " << static_cast<std::chrono::duration<double>>(sequentialCalculationTime - dataFilledTime).count() << std::endl;
-	std::cout << "Time to sum arrays on GPU: " << static_cast<std::chrono::duration<double>>(cudaCalculationTime - sequentialCalculationTime).count() << std::endl;
+	std::cout << "Time to sum arrays on GPU: " << static_cast<std::chrono::duration<double>>(cudaCalculationTime - dataFilledTime).count() << std::endl;
 }
