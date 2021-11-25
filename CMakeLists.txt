@@ -11,3 +11,5 @@ set_project_warnings(project_warnings)
 
 # Add 2 vectors (arrays) together using Cuda to accelerate the operation
 add_subdirectory(AddVectors)
+
+add_subdirectory(exercises)
