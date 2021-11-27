@@ -8,3 +8,6 @@ set_target_properties(VectorAdd PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(MatrixMul MatrixMul.cpp)
 set_target_properties(MatrixMul PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(Stencil1D Stencil1D.cpp)
+set_target_properties(Stencil1D PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
