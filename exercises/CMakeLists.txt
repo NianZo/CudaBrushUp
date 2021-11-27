@@ -1,4 +1,4 @@
-set_source_files_properties(Hello.cpp VectorAdd.cpp MatrixMul.cpp PROPERTIES LANGUAGE CUDA)
+set_source_files_properties(Hello.cpp VectorAdd.cpp MatrixMul.cpp Stencil1D.cpp PROPERTIES LANGUAGE CUDA)
 
 add_executable(Hello Hello.cpp)
 set_target_properties(Hello PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
