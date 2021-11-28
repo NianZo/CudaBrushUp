@@ -1,4 +1,4 @@
-set_source_files_properties(Hello.cpp VectorAdd.cpp MatrixMul.cpp Stencil1D.cpp MatrixMulShared.cpp VectorAddGridStride.cpp PROPERTIES LANGUAGE CUDA)
+set_source_files_properties(Hello.cpp VectorAdd.cpp MatrixMul.cpp Stencil1D.cpp MatrixMulShared.cpp VectorAddGridStride.cpp MatrixSums.cpp PROPERTIES LANGUAGE CUDA)
 
 add_executable(Hello Hello.cpp)
 set_target_properties(Hello PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
@@ -17,3 +17,6 @@ set_target_properties(MatrixMulShared PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 add_executable(VectorAddGridStride VectorAddGridStride.cpp)
 set_target_properties(VectorAddGridStride PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
+add_executable(MatrixSums MatrixSums.cpp)
+set_target_properties(MatrixSums PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
